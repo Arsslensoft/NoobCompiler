@@ -1,0 +1,205 @@
+using System;
+using System.Collections.Generic;
+using NoobCompiler.AST;
+using NoobCompiler.AST.Declarations;
+using NoobCompiler.AST.Definitions;
+using NoobCompiler.AST.Expressions;
+using NoobCompiler.AST.Statements;
+using NoobCompiler.Base;
+
+
+
+COMPILER programmes
+
+CompilationUnit Unit;
+
+
+CHARACTERS
+	letter     = 'A'..'Z' + 'a'..'z'.
+	digit      = '0'..'9'.
+
+	tab        = '\t'.
+	cr         = '\r'.
+	lf         = '\n'.
+	newLine    = cr + lf.
+	notNewLine = ANY - newLine .
+	ws         = " " + tab + '\u000b' + '\u000c'.
+
+
+TOKENS
+	ident    = letter {letter | digit}.
+	nb   = digit {digit}.
+
+
+	// tokens defined in order to get their names for LL(1) conflict resolvers
+	prog      = "prog".
+	var      = "var".
+	int      = "int".
+	func     = "func".
+	proc   = "proc".
+	if    = "if".
+	then      = "then".
+	else    = "else".
+	while     = "while".
+	do       = "do".
+	and = "and".
+	mod = "mod".
+	div = "div".
+	or = "or".
+	not = "not".
+	comma     = ','.
+	semicolon = ';'.
+	colon     = ':'.
+	star      = '*'.
+	lpar      = '('.
+	rpar      = ')'.
+	lbrack    = '['.
+	rbrace    = '}'.
+	dot = '.'.
+	plus = '+'.
+	minus = '-'.
+	lbrace = '{'.
+	rbrack = ']'.
+
+COMMENTS FROM "/*" TO "*/"
+COMMENTS FROM "//" TO lf
+
+IGNORE tab + cr + lf
+
+PRODUCTIONS
+
+programmes = (. Unit = new CompilationUnit (); ProgramDeclaration p = null; .) program<ref p> (. Unit.Program = p; .) dot.
+
+program<ref ProgramDeclaration p> = (. List<VariableDeclaration> vl = new List<VariableDeclaration>(); List<MethodDeclaration> ml = new List<MethodDeclaration>(); Statement s = null;  .)  prog (.  p = new ProgramDeclaration { Location = new Location(t.line, t.col, t.charPos) }; .) ident (. p.Name = t.val; .) semicolon  (variable_declarations<ref vl>  | ) (. p.Variables = vl; .) method_declarations<ref ml> (. p.Methods = ml; .) block_stmt<ref s> (. p.Block = s; .).
+
+
+
+variable_declarations<. ref List<VariableDeclaration> v .>  = variable_declaration<. ref v .>  ( | variable_declarations<ref v> ).
+
+
+variable_declaration <. ref List<VariableDeclaration> v .> = var (. var ptoken = t; List<VariableDeclaration> vtemp = new List<VariableDeclaration>(); List<string> il = null; .) ident_list<ref il> (.
+                     foreach(var id in il)
+                        vtemp.Add(new VariableDeclaration { Name = id,  Location = new Location(ptoken.line, ptoken.col, ptoken.charPos) } );
+                    if(v != null) // if it is passed by another var declaration
+                        vtemp.AddRange(v);
+                     v = vtemp;
+                .) ':' int ';' .
+
+
+
+ident_list<. ref List<string> il .> = ident (
+                    (. il = new List<string> { t.val }; .)
+                    | (. var i = t.val; .) ',' ident_list<ref il> (.il.Insert(0, i); .)
+                    ).
+
+
+method_declarations<. ref List<MethodDeclaration> ml .>  = (. MethodDeclaration m = null; .) method_declaration<ref m> ';' (
+                        (. ml = new List<MethodDeclaration> { m }; .)
+                        | method_declarations<ref ml> (. ml.Insert(0, m); .)
+                        ).
+
+
+method_declaration<ref MethodDeclaration m> = method_header<ref m> (. Statement s = null; List<VariableDeclaration> vl = null; .)
+                        (variable_declarations<ref vl> | (. vl = new List<VariableDeclaration>(); .) ) (. m.LocalVariables = vl; .)
+                        block_stmt<ref s> (. m.Block = s; .)
+                        .
+
+
+
+method_header<ref MethodDeclaration m> = func (. m = new MethodDeclaration {  Location = new Location(t.line, t.col, t.charPos), IsFunction = true };  .) ident  (. m.Name = t.val; .)
+                        ( (. List<Parameter> pl  = null; .)
+                        '(' parameter_list<ref pl> (. m.Parameters = pl; .) ')'
+                        |  (. m.Parameters = new List<Parameter>(); .)
+                        ) ':' int ';'
+                | proc (. m = new MethodDeclaration {  Location = new Location(t.line, t.col, t.charPos), IsFunction = false };  .) ident  (. m.Name = t.val; .)
+                        ( (. List<Parameter> pl  = null; .)
+                        '(' parameter_list<ref pl> (. m.Parameters = pl; .) ')'
+                        |  (. m.Parameters = new List<Parameter>(); .)
+                        ) ';'
+                .
+
+
+
+parameter_list<. ref List<Parameter> pl .> =  (. Parameter p = null; .) parameter<ref p> (
+                         (. pl = new List<Parameter> { p }; .)
+                        | ';' parameter_list<ref pl> (. pl.Insert(0, p); .)
+                        ).
+
+
+parameter<ref Parameter p> = ident (. p = new Parameter { Name = t.val,  Location = new Location(t.line, t.col, t.charPos) };  .) ':' int
+                        | var ident (. p = new Parameter { Name = t.val,  Location = new Location(t.line, t.col, t.charPos), IsVariable = true };  .) ':' int.
+
+
+block_stmt<ref Statement stmt> = '{' (.  List<Statement> stmts = null; stmt = new BlockStatement{ Location = new Location(t.line, t.col, t.charPos) };  .) (
+                            stmt_list<ref stmts> (. (stmt as BlockStatement).Statements = stmts; .)
+                            | (. (stmt as BlockStatement).Statements = new List<Statement>(); .)
+                            )  '}'.
+
+
+stmt_list <. ref List<Statement> sl .> = (. Statement s = null; .) stmt<ref s> (
+                    (. sl = new List<Statement> { s }; .)
+                    | ';' stmt_list<ref sl> (. sl.Insert(0, s); .)
+                     ).
+
+
+stmt<ref Statement stmt> = ident (
+                    (. stmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; .)
+                    | (. Expression e = null; stmt = new AssignmentStatement { Target = t.val, Location = new Location(t.line, t.col, t.charPos) } ;  .)  '=' expr<ref e> (. (stmt as AssignmentStatement).Expression = e; .)
+                    | (. List<Expression> args = null; stmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; .)  '(' expr_list<ref args>  (. (stmt as MethodInvocationStatement).Arguments = args; .)  ')' )
+      | block_stmt<ref stmt>
+      .
+
+expr_list <. ref List<Expression> e .> = (. Expression ex = null; .) expr<ref ex> (
+                (. e = new List<Expression> { ex }; .)
+                | ',' expr_list<ref e>   (. e.Insert(0, ex); .)
+                ).
+
+
+expr<ref Expression expr>  = simple_expr<ref expr> (
+                | (. Expression e = null; Operators op = Operators.Add; .) oprel<ref op>  simple_expr<ref e> (. expr = new BinaryOperationExpression { Left = expr, Right = e, Operator = op, Location = expr.Location};  .)
+            )
+            .
+
+simple_expr<ref Expression expr> = (. Expression e = null; Operators op = Operators.Add;.) signe<ref op> terme<ref e>  (. expr = new UnaryOperationExpression { Operator = op, Location = e.Location, Expression = e}; .)
+            | (. Expression e = null; Operators op = Operators.Add; .) terme<ref expr> (
+                | signe<ref op> simple_expr<ref e>  (. expr = new BinaryOperationExpression { Left = expr, Right = e, Operator = op, Location = expr.Location};  .)
+                | or simple_expr<ref e> (. expr = new BinaryOperationExpression { Left = expr, Right = e, Operator = Operators.Or, Location = expr.Location};  .)
+            )
+            .
+
+terme<ref Expression expr> =  (. Expression e = null; .)   facteur<ref e> (
+                               (. Expression right = null; Operators op = Operators.Add; .) opmul<ref op> terme<ref right> (. expr = new BinaryOperationExpression { Left = e, Right = right, Operator = op, Location = e.Location};  .)
+                                | (. expr = e; .)
+                                )
+                                .
+
+facteur<ref Expression ex> = ident (
+                        (. ex = new VariableExpression{ Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ;  .)
+                        | (. ex = new MethodInvocationExpression{ Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; List<Expression> el = null; .)  '(' expr_list<ref el>')'
+                        )
+        | nb (. ex = new IntegralExpression{ Value = int.Parse(t.val), Location = new Location(t.line, t.col, t.charPos) } ; .)
+        | (. Expression target = null; .)  '(' (. ex = new ParenthesisExpression{ Location = new Location(t.line, t.col, t.charPos) } ; .) expr<ref target> (.  (ex as ParenthesisExpression).Target = target; .) ')'
+        | (. Expression e = null; .) not (. ex = new UnaryOperationExpression{ Location = new Location(t.line, t.col, t.charPos), Operator = Operators.LogicalNot } ; .) facteur<ref  e> (.  (ex as UnaryOperationExpression).Expression = e; .)
+        .
+
+opmul<ref Operators op> = '/' (. op = Operators.Div; .)
+                        | '*' (. op = Operators.Mul; .)
+                        | "div" (. op = Operators.Div; .)
+                        | "mod" (. op = Operators.Mod; .)
+                        | "and" (. op = Operators.And; .)
+                        .
+
+
+oprel<ref Operators op> = "=="  (. op = Operators.Equal; .)
+        | "<>" (. op = Operators.NotEqual; .)
+        | '>' (. op = Operators.GT; .)
+        | '<' (. op = Operators.LT; .)
+        | ">=" (. op = Operators.GTE; .)
+        | "<=" (. op = Operators.LTE; .)
+        .
+
+signe<ref Operators op> = '+' (. op = Operators.Add; .)
+        | '-' (. op = Operators.Sub; .)
+        .
+
+END programmes.
