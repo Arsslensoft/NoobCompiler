@@ -228,6 +228,10 @@ namespace NoobCompiler.Contexts
             LocalStackIndex = 0;
             AnonymousParameterIdx = 4;
         }
+        public List<VarSpec> GetLocals()
+        {
+            return Resolver.KnownLocalVars;
+        }
         public ResolveContext(MethodDeclaration decl)
         {
 
@@ -322,6 +326,7 @@ namespace NoobCompiler.Contexts
                 mtd.StackIdx = AnonymousParameterIdx;
                 mtd.InitialStackIndex = AnonymousParameterIdx;
                 CurrentMethod.Parameters.Add(mtd);
+                AnonymousParameterIdx += 2;
                 return true;
             }
             else return false;

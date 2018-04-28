@@ -9,16 +9,16 @@ proc test(x:int);
 
 };
 
-proc test(h:int);  //NC0008 Duplicate method signature
+proc test(h:int);  //NC0108 Duplicate method signature
 var t:int;
-var y,t:int;//NC0007 local variable exist with that name
-var h:int;//NC0006 parameter exist with that name
+var y,t:int;//NC0107 local variable exist with that name
+var h:int;//NC0106 parameter exist with that name
 {
-a =  5 //NC0001 variable does not exist
+a =  5 //NC0101 variable does not exist
 };
 
 {
-  if test(xa) then //NC0003 cannot evaluate void type in if statement
+  if test(xa) then //NC0103 cannot evaluate void type in if statement
   { 
      xa = 8
   }
@@ -26,13 +26,13 @@ a =  5 //NC0001 variable does not exist
     xa = 7
   };
 
-  while test(xa) do  //NC0004 cannot evaluate void type in while statement
+  while test(xa) do  //NC0104 cannot evaluate void type in while statement
      {
 	   xa = 7;
-	   xa = 6 + test(xa) //NC0010 cannot evaluate void type in one operand
+	   xa = 6 + test(xa) //NC0110 cannot evaluate void type in one operand
 	 };
 
-  while 1 do  //NC0012 infinite loop
+  while 1 do  //NC0112 infinite loop
      {
 	   xa = 7
 	

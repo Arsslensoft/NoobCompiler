@@ -19,5 +19,10 @@ namespace NoobCompiler.AST
         {
             return this;
         }
+
+        public virtual string CommentString()
+        {
+            return "";
+        }
     }
 }

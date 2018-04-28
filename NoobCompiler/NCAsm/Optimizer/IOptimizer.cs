@@ -5,7 +5,7 @@ using System.Text;
 
 namespace NCAsm.Optimizer
 {
-    public interface IOptimizer
+    public interface IOptimizer : IComparer<IOptimizer>, IComparable<IOptimizer>
     {
         int Priority { get; set; }
         int Level { get; set; }

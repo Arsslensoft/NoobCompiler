@@ -1,0 +1,12 @@
+﻿prog test;
+var xa,t:int;
+proc test(s:int;i:int);
+var v:int;
+{
+ v = s + 1 * i;
+ s = t
+};
+
+{
+   xa = 6
+}.

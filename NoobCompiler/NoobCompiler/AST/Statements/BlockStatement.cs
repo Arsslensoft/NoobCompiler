@@ -19,5 +19,16 @@ namespace NoobCompiler.AST.Statements
             Statements = stmt;
             return this;
         }
+
+        /// <summary>
+        /// Emit code
+        /// </summary>
+        /// <returns>Success or fail</returns>
+        public override bool Emit(EmitContext ec)
+        {
+            foreach (var statement in Statements)
+                statement.Emit(ec);
+            return base.Emit(ec);
+        }
     }
 }

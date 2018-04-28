@@ -20,11 +20,21 @@ namespace NoobCompiler.AST.Statements
             {
                 variable = rc.Resolver.TryResolveName(Target);
                 if (variable == null)
-                    ResolveContext.Report.Error(1, Location, "Unresolved variable '" + Target + "'");
+                    ResolveContext.Report.Error(101, Location, "Unresolved variable '" + Target + "'");
             }
             if(Expression.IsVoid)
-                ResolveContext.Report.Error(3, Location, "cannot affect void type to '" + Target + "'");
+                ResolveContext.Report.Error(103, Location, "cannot affect void type to '" + Target + "'");
             return base.DoResolve(rc);
         }
+
+        public override bool Emit(EmitContext ec)
+        {
+
+            Expression.EmitToStack(ec);
+            ec.EmitComment(Target + "=" + Expression.CommentString());
+            variable.EmitFromStack(ec);
+            return true;
+        }
+   
     }
 }

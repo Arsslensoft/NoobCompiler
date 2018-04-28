@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Compiler\Specs\" />
+    <Folder Include="Compiler\Emitter\" />
   </ItemGroup>
 
 </Project>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using NCAsm;
+using NCAsm.x86;
 using NoobCompiler.AST.Expressions;
 using NoobCompiler.Contexts;
 
@@ -34,7 +35,7 @@ namespace NoobCompiler.AST.Statements
 
 
             if (Expression.IsVoid)
-                ResolveContext.Report.Error(4, Location, "cannot evaluate void type in while statement");
+                ResolveContext.Report.Error(104, Location, "cannot evaluate void type in while statement");
 
 
             if (Expression is IntegralExpression && (Expression as IntegralExpression).Value != 0)
@@ -44,6 +45,48 @@ namespace NoobCompiler.AST.Statements
             rc.EnclosingLoop = ParentLoop;
 
             return base.DoResolve(rc);
+        }
+        bool infinite = false;
+        void EmitConstantLoop(EmitContext ec)
+        {
+
+            IntegralExpression ce = null;
+
+            if (Expression is IntegralExpression)
+                ce = (IntegralExpression)Expression;
+
+
+            bool val = ce.Value != 0;
+            if (val)
+            { // if true
+                infinite = true;
+
+                ec.MarkLabel(EnterLoop);
+
+                Statement.Emit(ec);
+                ec.EmitInstruction(new Jump() { DestinationLabel = EnterLoop.Name });
+                ec.MarkLabel(ExitLoop);
+            }
+        }
+        public override bool Emit(EmitContext ec)
+        {
+            if (Expression is IntegralExpression)
+                EmitConstantLoop(ec);
+            else
+            {
+                ec.EmitInstruction(new Jump() { DestinationLabel = LoopCondition.Name });
+
+                ec.MarkLabel(EnterLoop);
+
+                Statement.Emit(ec);
+
+                ec.MarkLabel(LoopCondition);
+                // emit expression branchable
+                Expression.EmitBranchable(ec, EnterLoop, true);
+                // exit
+                ec.MarkLabel(ExitLoop);
+            }
+            return true;
         }
     }
 }

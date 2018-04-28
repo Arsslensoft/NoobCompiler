@@ -15,9 +15,9 @@ namespace NoobCompiler.AST.Definitions
         {
             var ps = rc.Resolver.ResolveParameter(Name);
             if(ps != null)
-                ResolveContext.Report.Error(5, Location, "duplicate parameter definition '" + Name + "'");
+                ResolveContext.Report.Error(105, Location, "duplicate parameter definition '" + Name + "'");
 
-            ParameterName = new ParameterSpec(Name, rc.CurrentMethod, Location, 4);
+            ParameterName = new ParameterSpec(Name, rc.CurrentMethod, Location, 4, IsVariable);
             
             rc.KnowVar(ParameterName);
             return base.DoResolve(rc);

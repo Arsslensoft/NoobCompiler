@@ -47,6 +47,10 @@ namespace NoobCompiler.AST.Expressions
         {
             return Target.EmitToRegister(ec, rg);
         }
-       
+
+        public override string CommentString()
+        {
+            return "(" + Target.CommentString() + ")";
+        }
     }
 }

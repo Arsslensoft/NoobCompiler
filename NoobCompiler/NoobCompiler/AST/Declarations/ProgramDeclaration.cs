@@ -37,5 +37,24 @@ namespace NoobCompiler.AST.Declarations
 
             return base.DoResolve(rc);
         }
+
+        /// <summary>
+        /// Emit code
+        /// </summary>
+        /// <returns>Success or fail</returns>
+        public override bool Emit(EmitContext ec)
+        {
+            foreach (var variableDeclaration in Variables)
+                variableDeclaration.Emit(ec);
+
+            foreach (var methodDeclaration in Methods)
+                methodDeclaration.Emit(ec);
+
+            ec.EmitComment("Entry Point");
+            Block.Emit(ec);
+
+
+            return base.Emit(ec);
+        }
     }
 }

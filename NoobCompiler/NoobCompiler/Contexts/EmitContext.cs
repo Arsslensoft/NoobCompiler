@@ -15,6 +15,9 @@ namespace NoobCompiler.Contexts
         bool ValueOf(EmitContext ec);
         bool ValueOfStack(EmitContext ec);
         bool LoadEffectiveAddress(EmitContext ec);
+
+        bool ValueOfAccess(EmitContext ec, int off);
+        bool ValueOfStackAccess(EmitContext ec, int off);
     }
     /// <summary>
     /// Special Emit for expressions
