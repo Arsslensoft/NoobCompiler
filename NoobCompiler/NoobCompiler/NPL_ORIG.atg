@@ -75,6 +75,8 @@ block_stmt = '{' ( stmt_list | )  '}'.
 stmt_list = stmt ( | ';' stmt_list).
 stmt = ident ( | '=' expr  | '(' expr_list')' )
       | block_stmt
+	  | if expr then stmt else stmt
+	  | while expr do stmt
       .
 expr_list = expr (
                 | ',' expr_list

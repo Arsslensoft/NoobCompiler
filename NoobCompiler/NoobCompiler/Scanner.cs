@@ -93,18 +93,6 @@ public class Buffer {
 		Pos = curPos;
 		return ch;
 	}
-	
-	// beg .. begin, zero-based, inclusive, in byte
-	// end .. end, zero-based, exclusive, in byte
-	public string GetString (int beg, int end) {
-		int len = 0;
-		char[] buf = new char[end - beg];
-		int oldPos = Pos;
-		Pos = beg;
-		while (Pos < end) buf[len++] = (char) Read();
-		Pos = oldPos;
-		return new String(buf, 0, len);
-	}
 
 	public int Pos {
 		get { return bufPos + bufStart; }
@@ -475,19 +463,5 @@ public class Scanner {
 		}
 	}
 
-	// peek for the next token, ignore pragmas
-	public Token Peek () {
-		do {
-			if (pt.next == null) {
-				pt.next = NextToken();
-			}
-			pt = pt.next;
-		} while (pt.kind > maxT); // skip pragmas
-	
-		return pt;
-	}
-
-	// make sure that peeking starts at the current scan position
-	public void ResetPeek () { pt = tokens; }
 
 } // end Scanner
