@@ -61,7 +61,7 @@ public class Parser
     public Token la;   // lookahead token
     int errDist = minErrDist;
 
-    CompilationUnit Unit;
+    public CompilationUnit Unit;
 
 
 
@@ -200,7 +200,7 @@ public class Parser
     {
         Expect(29);
         List<Statement> stmts = null; stmt = new BlockStatement { Location = new Location(t.line, t.col, t.charPos) };
-        if (la.kind == 1 || la.kind == 29)
+        if (StartOf(1))
         {
             stmt_list(ref stmts);
             (stmt as BlockStatement).Statements = stmts;
@@ -367,35 +367,55 @@ public class Parser
         else SynErr(51);
     }
 
-    void stmt(ref Statement stmt)
+    void stmt(ref Statement sstmt)
     {
         if (la.kind == 1)
         {
             Get();
-            if (la.kind == 19 || la.kind == 25)
+            if (la.kind == 10 || la.kind == 19 || la.kind == 25)
             {
-                stmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) };
+                sstmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) };
             }
             else if (la.kind == 31)
             {
-                Expression e = null; stmt = new AssignmentStatement { Target = t.val, Location = new Location(t.line, t.col, t.charPos) };
+                Expression e = null; sstmt = new AssignmentStatement { Target = t.val, Location = new Location(t.line, t.col, t.charPos) };
                 Get();
                 expr(ref e);
-                (stmt as AssignmentStatement).Expression = e;
+                (sstmt as AssignmentStatement).Expression = e;
             }
             else if (la.kind == 22)
             {
-                List<Expression> args = null; stmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) };
+                List<Expression> args = null; sstmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) };
                 Get();
                 expr_list(ref args);
-                (stmt as MethodInvocationStatement).Arguments = args;
+                (sstmt as MethodInvocationStatement).Arguments = args;
                 Expect(23);
             }
             else SynErr(52);
         }
         else if (la.kind == 29)
         {
-            block_stmt(ref stmt);
+            block_stmt(ref sstmt);
+        }
+        else if (la.kind == 8)
+        {
+            Get();
+            Expression e = null; Statement tst = null, fst = null; sstmt = new IfStatement { Location = new Location(t.line, t.col, t.charPos) };
+            expr(ref e);
+            Expect(9);
+            stmt(ref tst);
+            Expect(10);
+            stmt(ref fst);
+            (sstmt as IfStatement).Expression = e; (sstmt as IfStatement).TrueStatement = tst; (sstmt as IfStatement).FalseStatement = fst;
+        }
+        else if (la.kind == 11)
+        {
+            Get();
+            Expression e = null; Statement st = null; sstmt = new WhileStatement { Location = new Location(t.line, t.col, t.charPos) };
+            expr(ref e);
+            Expect(12);
+            stmt(ref st);
+            (sstmt as WhileStatement).Expression = e; (sstmt as WhileStatement).Statement = st;
         }
         else SynErr(53);
     }
@@ -403,10 +423,10 @@ public class Parser
     void expr(ref Expression expr)
     {
         simple_expr(ref expr);
-        if (StartOf(1))
+        if (StartOf(2))
         {
         }
-        else if (StartOf(2))
+        else if (StartOf(3))
         {
             Expression e = null; Operators op = Operators.Add;
             oprel(ref op);
@@ -442,11 +462,11 @@ public class Parser
             terme(ref e);
             expr = new UnaryOperationExpression { Operator = op, Location = e.Location, Expression = e };
         }
-        else if (StartOf(3))
+        else if (StartOf(4))
         {
             Expression e = null; Operators op = Operators.Add;
             terme(ref expr);
-            if (StartOf(4))
+            if (StartOf(5))
             {
             }
             else if (la.kind == 27 || la.kind == 28)
@@ -529,14 +549,14 @@ public class Parser
     {
         Expression e = null;
         facteur(ref e);
-        if (StartOf(5))
+        if (StartOf(6))
         {
             Expression right = null; Operators op = Operators.Add;
             opmul(ref op);
             terme(ref right);
             expr = new BinaryOperationExpression { Left = e, Right = right, Operator = op, Location = e.Location };
         }
-        else if (StartOf(6))
+        else if (StartOf(7))
         {
             expr = e;
         }
@@ -548,7 +568,7 @@ public class Parser
         if (la.kind == 1)
         {
             Get();
-            if (StartOf(7))
+            if (StartOf(8))
             {
                 ex = new VariableExpression { Name = t.val, Location = new Location(t.line, t.col, t.charPos) };
             }
@@ -557,6 +577,7 @@ public class Parser
                 ex = new MethodInvocationExpression { Name = t.val, Location = new Location(t.line, t.col, t.charPos) }; List<Expression> el = null;
                 Get();
                 expr_list(ref el);
+                (ex as MethodInvocationExpression).Arguments = el;
                 Expect(23);
             }
             else SynErr(61);
@@ -630,13 +651,14 @@ public class Parser
 
     static readonly bool[,] set = {
         {_T,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
-        {_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+        {_x,_T,_x,_x, _x,_x,_x,_x, _T,_x,_x,_T, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
+        {_x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _T,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
         {_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_T,_x, _x},
         {_x,_T,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_T,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x},
-        {_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_T,_x, _x},
+        {_x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _T,_x,_x,_x, _x,_x,_T,_T, _x,_x,_x,_T, _x,_T,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_T,_T,_x, _x},
         {_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _x,_x,_x,_x, _x,_T,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_x,_x, _x,_x,_x,_x, _x},
-        {_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _T,_x,_T,_T, _x,_x,_x,_T, _x,_T,_x,_T, _T,_x,_x,_x, _x,_T,_T,_T, _T,_T,_T,_x, _x},
-        {_x,_x,_x,_x, _x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_T, _T,_x,_T,_T, _x,_T,_x,_T, _x,_T,_x,_T, _T,_x,_x,_x, _T,_T,_T,_T, _T,_T,_T,_x, _x}
+        {_x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _T,_x,_x,_x, _T,_x,_T,_T, _x,_x,_x,_T, _x,_T,_x,_T, _T,_x,_x,_x, _x,_T,_T,_T, _T,_T,_T,_x, _x},
+        {_x,_x,_x,_x, _x,_x,_x,_x, _x,_T,_T,_x, _T,_T,_T,_T, _T,_x,_T,_T, _x,_T,_x,_T, _x,_T,_x,_T, _T,_x,_x,_x, _T,_T,_T,_T, _T,_T,_T,_x, _x}
 
     };
 } // end Parser

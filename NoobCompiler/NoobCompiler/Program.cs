@@ -1,5 +1,6 @@
 ﻿using System;
 using NoobCompiler.AST.Declarations;
+using NoobCompiler.Contexts;
 
 namespace NoobCompiler
 {
@@ -12,7 +13,8 @@ namespace NoobCompiler
             parser.Parse();
             Console.WriteLine("Hello World!");
 
-
+            ResolveContext rc = new ResolveContext();
+           var n = parser.Unit.DoResolve(rc);
             Console.Read();
         }
     }
