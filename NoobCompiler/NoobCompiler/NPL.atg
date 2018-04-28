@@ -11,7 +11,7 @@ using NoobCompiler.Base;
 
 COMPILER programmes
 
-CompilationUnit Unit;
+public CompilationUnit Unit;
 
 
 CHARACTERS
@@ -136,18 +136,19 @@ block_stmt<ref Statement stmt> = '{' (.  List<Statement> stmts = null; stmt = ne
                             )  '}'.
 
 
-stmt_list <. ref List<Statement> sl .> = (. Statement s = null; .) stmt<ref s> (
-                    (. sl = new List<Statement> { s }; .)
-                    | ';' stmt_list<ref sl> (. sl.Insert(0, s); .)
+stmt_list <. ref List<Statement> sl .> = (. Statement s = null; .) stmt<ref s> (. sl = new List<Statement> { s }; .)   (
+                   | ';' stmt_list<ref sl> (. sl.Insert(0, s); .)
                      ).
 
 
-stmt<ref Statement stmt> = ident (
-                    (. stmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; .)
-                    | (. Expression e = null; stmt = new AssignmentStatement { Target = t.val, Location = new Location(t.line, t.col, t.charPos) } ;  .)  '=' expr<ref e> (. (stmt as AssignmentStatement).Expression = e; .)
-                    | (. List<Expression> args = null; stmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; .)  '(' expr_list<ref args>  (. (stmt as MethodInvocationStatement).Arguments = args; .)  ')' )
-      | block_stmt<ref stmt>
-      .
+stmt<ref Statement sstmt> = ident (
+                    (. sstmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; .)
+                    | (. Expression e = null; sstmt = new AssignmentStatement { Target = t.val, Location = new Location(t.line, t.col, t.charPos) } ;  .)  '=' expr<ref e> (. (sstmt as AssignmentStatement).Expression = e; .)
+                    | (. List<Expression> args = null; sstmt = new MethodInvocationStatement { Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; .)  '(' expr_list<ref args>  (. (sstmt as MethodInvocationStatement).Arguments = args; .)  ')' )
+      | block_stmt<ref sstmt>
+	  | if (. sstmt  = new IfStatement  { Location = new Location(t.line, t.col, t.charPos) } ; Expression e = null; Statement fst=null,tst=null; .) expr<ref e> then stmt<ref tst> else stmt<ref fst> (. (sstmt as IfStatement).Expression = e; (sstmt as IfStatement).TrueStatement = tst;  (sstmt as IfStatement).FalseStatement = fst;.)
+      | while (. sstmt  = new WhileStatement  { Location = new Location(t.line, t.col, t.charPos) } ; Expression e = null; Statement st=null; .) expr<ref e> do stmt<ref st> (. (sstmt as WhileStatement).Expression = e; (sstmt as WhileStatement).Statement = st; .)
+	  .
 
 expr_list <. ref List<Expression> e .> = (. Expression ex = null; .) expr<ref ex> (
                 (. e = new List<Expression> { ex }; .)
@@ -175,7 +176,7 @@ terme<ref Expression expr> =  (. Expression e = null; .)   facteur<ref e> (
 
 facteur<ref Expression ex> = ident (
                         (. ex = new VariableExpression{ Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ;  .)
-                        | (. ex = new MethodInvocationExpression{ Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; List<Expression> el = null; .)  '(' expr_list<ref el>')'
+                        | (. ex = new MethodInvocationExpression{ Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; List<Expression> el = null; .)  '(' expr_list<ref el>  (. (ex as MethodInvocationExpression).Arguments = el; .)')'
                         )
         | nb (. ex = new IntegralExpression{ Value = int.Parse(t.val), Location = new Location(t.line, t.col, t.charPos) } ; .)
         | (. Expression target = null; .)  '(' (. ex = new ParenthesisExpression{ Location = new Location(t.line, t.col, t.charPos) } ; .) expr<ref target> (.  (ex as ParenthesisExpression).Target = target; .) ')'

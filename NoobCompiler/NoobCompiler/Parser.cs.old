@@ -445,7 +445,6 @@ public CompilationUnit Unit;
 				ex = new MethodInvocationExpression{ Name = t.val, Location = new Location(t.line, t.col, t.charPos) } ; List<Expression> el = null; 
 				Get();
 				expr_list(ref el);
-				(ex as MethodInvocationExpression).Arguments = el; 
 				Expect(23);
 			} else SynErr(61);
 		} else if (la.kind == 2) {
