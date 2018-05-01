@@ -1,6 +1,0 @@
-cr1 EXPLAIN SCANNER
-CR2 explain transformations to LL(1) then explain recursive decent parser
-CR3 show lexical / syntax errors (explain reporting)
-CR4 explain resolve context principle
-CR5 Explain emitcontext and 3 adress machine code
-CR6 Code Generate code to target machine
