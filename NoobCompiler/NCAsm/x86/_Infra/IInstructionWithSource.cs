@@ -1,0 +1,40 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace NCAsm.x86 {
+    public interface IInstructionWithSource {
+        NCAsm.ElementReference SourceRef {
+            get;
+            set;
+        }
+
+        RegistersEnum? SourceReg
+        {
+            get;
+            set;
+        }
+
+        ushort? SourceValue
+        {
+            get;
+            set;
+        }
+
+        bool SourceIsIndirect {
+            get;
+            set;
+        }
+
+        int SourceDisplacement {
+            get;
+            set;
+        }
+        bool SourceEmpty
+        {
+            get;
+            set;
+        }
+    }
+}
